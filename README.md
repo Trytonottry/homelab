@@ -96,8 +96,8 @@ See [Network Diagram](./🌐 Homelab Network Topology Diagram.md)
 
 **[Твоё имя / GitHub Nickname]**  
 - 💬 Telegram: @Try2NotTry  
-- 💻 [GitHub:] (https://github.com/Trytonottry)  
-- ✉️ [Email:] (arbitr777cpa@gmail.com)  
+- 💻 [GitHub:](https://github.com/Trytonottry)  
+- ✉️ [Email:](arbitr777cpa@gmail.com)  
 
 > 🧠 “Homelab is not just a hobby — it’s a personal cloud, a DevOps lab, and a place where ideas become infrastructure.”
 
