@@ -1,4 +1,3 @@
-# 🧠 Homelab Infrastructure — DevOps & System Engineering Project
 
 ![Homelab Banner](https://img.shields.io/badge/Homelab-Linux%20Based-blue?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
@@ -73,12 +72,12 @@ The lab includes multiple physical and virtual machines connected through a giga
 
 ## 📈 Goals
 
-✅ Current:  
+✅ **Current:**  
 - Functional virtualization cluster (Proxmox + Docker)  
 - Full remote management via ZeroTier  
 - Distributed nodes for CI/CD, IoT, and automation  
 
-🚀 Next steps:  
+🚀 **Next steps:**  
 - Deploy Ansible for infrastructure-as-code  
 - Implement centralized logging (Loki)  
 - Develop complete CI/CD pipeline for Python projects  
@@ -86,21 +85,45 @@ The lab includes multiple physical and virtual machines connected through a giga
 
 ---
 
-## 🧩 Network Topology
+## 🗺️ Architecture Diagram (Mermaid)
 
-See [Network Diagram](./🌐 Homelab Network Topology Diagram.md)
+```mermaid
+graph TD
+    subgraph Remote Access
+        A515[Acer Aspire A515-55<br>Garuda Linux<br>Dev Laptop]
+    end
+
+    subgraph ZeroTier Network
+        A515 --> ZT[(ZeroTier)]
+        ZT --> TM1703[Xiaomi TM1703<br>Debian<br>Gateway + Monitoring]
+    end
+
+    subgraph Local Network (1 Gbit Ethernet)
+        TM1703 --> DL380p[HP ProLiant DL380p Gen8<br>Proxmox VE<br>Main Host]
+        TM1703 --> OPI[Orange Pi 3 Zero<br>Armbian<br>Wake-on-LAN]
+        TM1703 --> WoWe[Mini PC WoWe<br>Lubuntu<br>Web / Backup]
+        TM1703 --> Veriton[Acer Veriton Z2650g<br>Linux Mint<br>CI/CD Node]
+        TM1703 --> Mango[Mango Pi<br>Armbian<br>IoT / DNS / MQTT]
+        TM1703 --> Asus[Asus ET2701I-W8<br>Linux Mint<br>GPU / Game Center]
+    end
+
+    classDef device fill:#1f2937,stroke:#4b5563,color:#fff,stroke-width:1px;
+    class DL380p,OPI,WoWe,Veriton,Mango,Asus,TM1703,A515 device;
+```
+
+> 🧩 _The diagram can be edited directly in Markdown to add new nodes, VLANs, or virtual machines._
 
 ---
 
 ## 🧑‍💻 Author
 
-**[Твоё имя / GitHub Nickname]**  
-- 💬 Telegram: [@твой_ник]  
-- 💻 GitHub: [github.com/твой_ник]  
-- ✉️ Email: [твоя_почта@example.com]  
+**[Твоё имя / GitHub Nickname]**
+
+- 💬 Telegram: [@твой_ник]
+    
+- 💻 GitHub: [github.com/твой_ник]
+    
+- ✉️ Email: [твоя_почта@example.com]
+    
 
 > 🧠 “Homelab is not just a hobby — it’s a personal cloud, a DevOps lab, and a place where ideas become infrastructure.”
-
----
-
-![Footer](https://img.shields.io/badge/Built%20with-Linux%20%7C%20Python%20%7C%20Coffee-brown?style=for-the-badge)
