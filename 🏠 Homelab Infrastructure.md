@@ -1,120 +1,229 @@
-## 📘 Введение
-**Проект:** Домашняя лаборатория (Homelab Infrastructure)  
-**Автор:** [Твоё имя]  
-**Цель:** Создание распределённой инфраструктуры для изучения DevOps-практик, автоматизации, виртуализации, мониторинга и удалённого администрирования.  
+# 🏠 Homelab Infrastructure
 
-Домашняя лаборатория представляет собой систему из физических и виртуальных устройств, объединённых в локальную сеть Ethernet с удалённым доступом через ZeroTier.  
-Основная задача — реализация production-подобной среды для тестирования проектов, CI/CD, контейнеризации и разработки собственных сервисов.
+## 1. Purpose
 
----
+This document describes the current physical infrastructure of the HOME homelab.
 
-## ⚙️ Аппаратная архитектура
+The lab is used for:
 
-| Устройство | ОС / Дистрибутив | Назначение | Подключение |
-|-------------|------------------|-------------|--------------|
-| **HP ProLiant DL380p Gen8** | Proxmox VE | Основной сервер виртуализации | Ethernet |
-| **Orange Pi 3 Zero** | Armbian | Wake-on-LAN, вспомогательный контроллер | Ethernet |
-| **Acer Veriton Z2650g** | Linux Mint | Тестовый узел, CI/CD | Ethernet |
-| **Asus ET2701I-W8** | Linux Mint | Игровая станция / GPU-тесты | Ethernet |
-| **Xiaomi TM1703** | Debian | Мониторинг, точка входа ZeroTier | Ethernet |
-| **Mango Pi** | Armbian | MQTT, IoT, DNS-фильтрация | Ethernet |
-| **Мини ПК WoWe** | Lubuntu | Веб-сервисы, резервное копирование | Ethernet |
-| **Acer Aspire A515-55** | Garuda Linux | Основная рабочая станция (DevOps / разработка) | Wi-Fi + ZeroTier |
+- Linux/system administration practice
+- virtualization
+- self-hosted services
+- networking experiments
+- storage and backup
+- observability
+- automation
+- production-like failure and recovery testing
+
+Planned infrastructure is explicitly marked as **planned** and is not treated as deployed inventory.
 
 ---
 
-## 🌐 Сетевая топология
+## 2. Compute
 
-**Сеть:** Ethernet (1 Гбит)  
-**Удалённый доступ:** ZeroTier + SSH  
-**Основной шлюз:** Xiaomi TM1703  
-**Мониторинг:** Prometheus + Grafana *(в процессе внедрения)*  
-**Wake-on-LAN:** Orange Pi 3 Zero  
-**VPN и NAT:** через Debian (TM1703)
+### HP ProLiant DL380p Gen8
 
-> 🧩 Диаграмма сети будет добавлена позже (ZeroTier, LAN, WOL, Proxmox, Monitoring)
+**Role:** primary virtualization host.
 
----
+| Property | Current state |
+|---|---|
+| Hypervisor | Proxmox VE 9.2.x |
+| Base OS | Debian 13 (trixie) |
+| CPU | 2 × Xeon E5-2650L |
+| CPU threads | 32 |
+| RAM | ~94 GiB visible to Proxmox |
+| RAID controller | HPE Smart Array P420i |
+| Workloads | KVM VMs, LXC, infrastructure services |
 
-## 🧠 Основные сервисы и роли
+The server is intentionally treated as a lab platform rather than as a production-critical single point of failure.
 
-| Сервис | Хост | Описание |
-|--------|------|----------|
-| **Proxmox VE** | HP DL380p | Виртуализация контейнеров и VM |
-| **Grafana / Prometheus** | TM1703 | Централизованный мониторинг (в разработке) |
-| **Home Assistant / MQTT** | Mango Pi | Умный дом, сенсорика |
-| **Pi-hole / AdGuard Home** | Mango Pi | DNS фильтрация и аналитика трафика |
-| **Nginx / FastAPI / Flask** | WoWe | Веб-приложения и API-сервисы |
-| **Git / Jenkins (CI/CD)** | Acer Veriton | Автоматизация сборок и тестирования |
-| **ZeroTier + SSH** | Все устройства | Безопасный удалённый доступ |
+Power consumption and acoustics are significant constraints.
 
----
+### Orange Pi Zero 3
 
-## 🤖 Автоматизация и администрирование
+**Role:** auxiliary management/controller node.
 
-- Автоматическое включение сервера через **Wake-on-LAN** (Orange Pi 3 Zero)  
-- Сценарии резервного копирования (**rsync**, **borgbackup**) между Proxmox и WoWe  
-- **Python** и **Bash**-скрипты для управления сервисами  
-- **Docker / LXC** контейнеризация  
-- **Ansible (в планах)** для централизованного конфигурирования всех устройств  
-- Управление виртуальными машинами и контейнерами через **Proxmox API**
+Potential workloads include:
+
+- Wake-on-LAN
+- hardware/environment telemetry
+- emergency management workflows
+- lightweight network utilities
+
+Small ARM nodes are useful for management-plane functions because they can remain available while the main compute host is powered down.
 
 ---
 
-## 🔒 Безопасность
+## 3. Network
 
-- Изоляция через **ZeroTier** и статические маршруты  
-- **Fail2Ban** и **UFW** на публичных хостах  
-- Двухфакторная аутентификация (2FA)  
-- Минимизация открытых портов и NAT-трансляций  
-- Регулярные обновления и аудит SSH-ключей  
+### Router
 
----
+**MikroTik hAP ac3**
 
-## 🧩 Реализованные проекты в рамках homelab
+- RouterOS 7.x
+- LAN: `192.168.1.0/24`
+- WireGuard management network: `10.255.255.0/30`
 
-- 🤖 **Telegram-бот с оплатой через CryptoBot** и выдачей GPT-доступа  
-- 🕵️ **Система мониторинга тендеров** (Selenium + Telegram API)  
-- 🧠 **Локальный анализ изображений и видео** с помощью нейросетей  
-- 🌐 **FastAPI и Flask веб-приложения** с деплоем на WoWe  
-- 🔈 **Голосовой ассистент** с ASR и TTS, обрабатываемый сервером DL380p  
+The MikroTik is the primary home network gateway.
 
----
+### Switching
 
-## 📈 Достижения и цели развития
+The current environment contains multiple Ethernet switches, including unmanaged switches.
 
-**Достигнуто:**
-- Централизованная виртуализация (Proxmox)  
-- Полный удалённый доступ и управление (ZeroTier + SSH)  
-- Распределённая сеть устройств с разными ролями  
-- Среда для экспериментов с DevOps, Python и сетевыми сервисами  
+The network is intentionally kept simple until segmentation provides a measurable operational or security benefit.
 
-**В планах:**
-- Внедрение **Ansible** и централизованного логирования (**Loki**)  
-- Создание **CI/CD**-цепочки для деплоя Python-проектов  
-- Автоматизация резервного копирования и уведомлений  
-- Визуализация сети и метрик через **Grafana Dashboard**  
+### Planned network improvements
+
+- formal network inventory
+- VLAN segmentation
+- documented management plane
+- clearer separation of trusted, server and IoT traffic
+- monitoring of critical network devices
 
 ---
 
-## 🧰 Используемые технологии
+## 4. Virtualization
 
-**Системы:** Proxmox VE, Armbian, Debian, Linux Mint, Garuda, Lubuntu  
-**Инструменты:** Docker, LXC, Ansible, Prometheus, Grafana, rsync, borg, FastAPI, Flask, Python, Bash  
-**Сети:** ZeroTier, SSH, VPN, NAT, VLAN (в планах)  
-**Безопасность:** Fail2Ban, UFW, 2FA, SSH-ключи  
+The main virtualization layer is **Proxmox VE**.
 
----
+Workload types:
 
-## 📬 Контакты
+- KVM virtual machines
+- LXC containers
+- Docker/Compose inside appropriate VMs
+- selective k3s experiments
 
-- **Telegram:** [@твой_ник]  
-- **GitHub:** [github.com/твой_ник]  
-- **Email:** [твоя_почта@example.com]  
+The default principle is to avoid nesting technologies without a concrete reason. For example, Kubernetes is not used merely because the lab can run it.
 
 ---
 
-> 💡 *“Homelab — это не просто хобби, это мой личный путь к профессиональному DevOps и системной архитектуре.”*
+## 5. Storage
+
+Current storage work is split between active HOME infrastructure and a planned remote/secondary site.
+
+### HOME
+
+Active compute and service storage.
+
+### DACHA — planned
+
+The future DACHA site is intended to provide:
+
+- secondary backup storage
+- cold-copy storage
+- remote recovery capability
+- an independent failure domain
+
+Planned storage infrastructure includes SAS-connected disks and dedicated storage hosts.
+
+Hardware that has only been considered or planned is **not** listed as current inventory.
 
 ---
 
+## 6. Backup and recovery
+
+Backup tooling currently includes:
+
+- **Proxmox Backup Server**
+- **Kopia**
+- cold/offline copies
+
+Current logical backup data is approximately:
+
+- PBS: ~7.6 TiB
+- Kopia: ~5.1 TiB
+
+The target architecture is based on multiple independent copies rather than relying on RAID alone.
+
+Important recovery procedures should eventually be documented as executable runbooks:
+
+1. identify failure
+2. restore infrastructure
+3. restore application data
+4. verify integrity
+5. return service to operation
+
+A backup that has never been restored is not considered operationally verified.
+
+---
+
+## 7. Observability
+
+Primary infrastructure monitoring direction:
+
+**Zabbix**
+
+Monitoring should cover:
+
+- availability
+- resource utilization
+- disk capacity
+- disk health
+- hardware health
+- network health
+- backup jobs
+- critical services
+
+**Gotify** is used for actionable notifications.
+
+Grafana/Prometheus remain optional tools for workloads where their model provides additional value.
+
+---
+
+## 8. Service management
+
+Current infrastructure tooling includes:
+
+- Komodo
+- Docker / Compose
+- Caddy
+- Git / GitHub
+- Bash
+- Python
+- WireGuard
+- Zabbix
+- Gotify
+
+The lab does not aim to run every popular DevOps tool.
+
+The preferred architecture is the smallest stack that provides:
+
+**automation → observability → backup → recovery**
+
+---
+
+## 9. Security model
+
+Core principles:
+
+- no unnecessary public exposure
+- private management paths
+- SSH key authentication
+- least privilege
+- network segmentation where justified
+- isolated backup copies
+- secrets outside Git
+- regular patching
+- documented recovery procedures
+
+The lab is also used to test security boundaries and failure scenarios safely.
+
+---
+
+## 10. Current engineering priorities
+
+1. Documentation and inventory accuracy
+2. Monitoring and alerting
+3. Backup verification
+4. Network structure
+5. Automation of repetitive operations
+6. HOME ↔ DACHA resilience
+7. Only then: additional platform components
+
+---
+
+## 11. Engineering principle
+
+> **If a component increases operational complexity without improving reliability, security, observability or learning value, it probably does not belong in the lab.**
+
+_Last updated: September 2026_
