@@ -1,50 +1,106 @@
+# 🌐 Homelab Network Topology
 
+## Logical topology
 
 ```text
-                         ┌──────────────────────────┐
-                         │     Acer Aspire A515-55  │
-                         │   (Garuda Linux, Laptop) │
-                         │   ────▶ ZeroTier Access  │
-                         └──────────────┬───────────┘
-                                        │
-                                        ▼
-                          ╔════════════════════════╗
-                          ║   ZeroTier Virtual LAN  ║
-                          ╚════════════════════════╝
-                                        │
-            ┌────────────────────────────────────────────────────┐
-            │                    Local Network (LAN)              │
-            │                     Ethernet 1 Gbit                │
-            └────────────────────────────────────────────────────┘
-                                        │
-     ┌──────────────────────┬────────────────────────┬──────────────────────────┬────────────────────┐
-     ▼                      ▼                        ▼                          ▼                    ▼
-┌─────────────┐     ┌────────────────┐      ┌────────────────────┐     ┌──────────────────┐   ┌────────────────┐
-│ Xiaomi TM1703│     │ HP DL380p Gen8│      │ Orange Pi 3 Zero  │     │ Mango Pi (IoT)   │   │ Mini PC WoWe   │
-│ Debian       │     │ Proxmox VE    │      │ Armbian           │     │ Armbian          │   │ Lubuntu        │
-│ ─ Gateway    │     │ ─ VM Host     │      │ ─ Wake-on-LAN     │     │ ─ MQTT / DNS     │   │ ─ Web Services │
-│ ─ Monitoring │     │ ─ LXC / KVM   │      │ ─ Power Control   │     │ ─ Pi-hole        │   │ ─ Backups      │
-└─────────────┘     └────────────────┘      └────────────────────┘     └──────────────────┘   └────────────────┘
-        │                                                                               │
-        │                                                                               │
-        │                                                                               ▼
-        │                                                                      ┌───────────────────┐
-        │                                                                      │ Acer Veriton Z2650│
-        │                                                                      │ Linux Mint        │
-        │                                                                      │ ─ CI/CD Node      │
-        │                                                                      └───────────────────┘
-        │
-        ▼
-┌──────────────────────┐
-│ Asus ET2701I-W8      │
-│ Linux Mint           │
-│ ─ GPU / Game Center  │
-└──────────────────────┘
+                         Internet
+                            │
+                            ▼
+                    ┌────────────────┐
+                    │ MikroTik hAP   │
+                    │ ac3 / RouterOS │
+                    └───────┬────────┘
+                            │
+                 LAN 192.168.1.0/24
+                            │
+              ┌─────────────┴─────────────┐
+              │                           │
+              ▼                           ▼
+      ┌───────────────┐          ┌──────────────────┐
+      │ Ethernet      │          │ Management / VPN │
+      │ switches      │          │ WireGuard        │
+      └───────┬───────┘          │ 10.255.255.0/30 │
+              │                   └──────────────────┘
+       ┌──────┼───────────┬───────────────┐
+       │      │           │               │
+       ▼      ▼           ▼               ▼
+    Proxmox  Orange Pi   Linux clients   Other LAN
+    DL380p   Zero 3      / test nodes    devices
+       │
+       ├── KVM VMs
+       ├── LXC containers
+       └── Docker workloads
 
-Legend:
-- ───▶  Remote Access (ZeroTier)
-- ─────  Ethernet Cable Connection
-- Devices are linked via 1 Gbit LAN
-- Xiaomi TM1703 acts as the central hub (gateway, monitor, and VPN entry)
-  ```
-  
+                 Backup / secondary site
+                         │
+                         ▼
+                ┌──────────────────┐
+                │ DACHA (planned)  │
+                │ Storage + backup  │
+                └──────────────────┘
+```
+
+## Addressing
+
+| Network | Purpose |
+|---|---|
+| `192.168.1.0/24` | HOME LAN |
+| `10.255.255.0/30` | WireGuard management network |
+
+The exact per-host addressing should be maintained in a separate inventory as the environment grows.
+
+## Network principles
+
+### 1. Management plane
+
+Administrative access should use dedicated/private paths wherever possible.
+
+### 2. Segmentation
+
+VLANs are planned, but only where they provide a concrete security or operational benefit.
+
+Potential future zones:
+
+- management
+- servers
+- clients
+- IoT
+- guest
+- storage/backup
+
+### 3. Remote access
+
+Remote administration should not depend on exposing Proxmox, storage management or other administrative interfaces directly to the public Internet.
+
+### 4. Resilience
+
+The network design must account for:
+
+- router failure
+- Internet outage
+- loss of the main compute host
+- loss of HOME
+- inability to reach one physical site
+
+The future DACHA site is intended to provide a separate recovery domain rather than simply another LAN segment.
+
+## Current vs planned
+
+**Current**
+
+- MikroTik hAP ac3
+- RouterOS 7.x
+- `192.168.1.0/24`
+- WireGuard management network
+- Ethernet switching
+- Proxmox host
+- auxiliary ARM node
+
+**Planned**
+
+- VLAN segmentation
+- more explicit management/storage networks
+- independent secondary-site connectivity
+- improved network monitoring
+
+_Last updated: September 2026_
